@@ -1,0 +1,22 @@
+<div id="startOverlay">
+<div>
+chi>AR Multi-Window Viewers/h1> <p>Tap to start camera and scan the target image.</p> «button id="startButton">Start AR</button> </div>
+</div>
+div id="topLabel" class="top-label"›espan class="icon">e</spanscspan id="scanLabelText">Scanning</spansc/divs
+C-eie
+id="scenc" mindar-inage-"inageTargetSrc: ./targets.mind; autoStart: false;" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false"
+embedded
+renderer=" co lortanagement: true, physicallyCorrectLights; alpha: true" <a-canera position="e e 0" look-controls="enabled: false"›</a-camera> ‹a-entity id="targete" mindar-image-target="targetIndex: 0"></a-entity> ca-entity id="target1" mindar-image-target="targetIndex: 1"></a-entity> ca-entity id="target2" mindar-image-target="targetIndex: 2"»/a-entity>
+</a-scene>
+‹script>
+document. addEventListener ("DOMContentLoaded", ()=> (
+const STORAGE_KEY = "ar_window_state_v1";
+const CONTENT = (
+0: { title:
+"WASSER", type: "video", src: "./nedia/250610_Blatten_DOM-vorher-nachher_h265_1.mp4", aspect: 16 / 9 }, 1: { title: "Blatten", type: "video", src: "./nedia/Bildschirmaufnahme 2026-85-19 um 18.28.45.mp4", aspect: 16 / 9 },
+1/2: ( title: "Blatten Potree",
+type:
+"ifrane", src:
+•/potree nenc: aspect: 9/3
+2: (title: "Blatten COP, type: "1rame,src:"./copc.htm1")
+};
