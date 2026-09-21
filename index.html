@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AR Multi-Window Viewer</title>
+
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+
+  <style>
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: transparent;
+      font-family: Arial, sans-serif;
+    }
+
+    a-scene {
+      width: 100vw;
+      height: 100vh;
+    }
+
+    #startOverlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.92);
+      color: white;
+      z-index: 9999;
+      text-align: center;
+      padding: 2rem;
+    }
+
+    #startButton {
+      margin-top: 1rem;
+      padding: 1rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      background: white;
+      color: black;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .top-label {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      z-index: 10000;
+      color: white;
+      background: rgba(0,0,0,0.55);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 14px;
+      display: none;
+      cursor: pointer;
+      user-select: none;
+      pointer-events: auto;
+    }
+
+    .top-label.paused {
+      background: rgba(130,0,0,0.75);
+    }
+
+    .top-label .icon {
+      margin-right: 6px;
+    }
+
+    .ar-window {
+      position: fixed;
+      width: 420px;
+      min-width: 280px;
+      min-height: 220px;
+      z-index: 9998;
+      background: #111;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 10px 35px rgba(0,0,0,0.35);
+      touch-action: none;
+      user-select: none;
+      display: none;
+      pointer-events: auto;
+    }
+
+    .ar-window.fullscreen {
+      width: 100vw !important;
+      height: 100vh !important;
+      top: 0 !important;
+      left: 0 !important;
+      border-radius: 0 !important;
+    }
+
+    .ar-header {
+      background: rgba(0,0,0,0.88);
+      color: white;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-sizing: border-box;
+      padding: 0 8px 0 10px;
+      position: relative;
+      z-index: 10;
+      pointer-events: auto;
+    }
+
+    .ar-title {
+      flex: 1;
+      font-size: 14px;
+      font-weight: bold;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding-right: 8px;
+      line-height: 44px;
+      pointer-events: auto;
+      cursor: move;
+      user-select: none;
+    }
+
+    .ar-buttons {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+      align-items: center;
+      pointer-events: auto;
+      position: relative;
+      z-index: 9999;
+    }
+
+    .iconBtn {
+      width: 28px;
+      height: 28px;
+      border: none;
+      border-radius: 999px;
+      background: white;
+      color: black;
+      font-weight: bold;
+      cursor: pointer;
+      padding: 0;
+      line-height: 28px;
+      font-size: 16px;
+      pointer-events: auto;
+      position: relative;
+      z-index: 9999;
+    }
+
+    .ar-content {
+      position: relative;
+      width: 100%;
+      height: calc(100% - 44px);
+      overflow: hidden;
+      background: black;
+      margin: 0;
+      padding: 0;
+      pointer-events: auto;
+    }
+
+    .ar-video,
+    .ar-iframe {
+      width: 100%;
+      height: 100%;
+      display: block;
+      border: 0;
+      margin: 0;
+      padding: 0;
+      background: black;
+      pointer-events: auto;
+    }
+
+    .iframeWrap {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: black;
+      pointer-events: auto;
+    }
+
+    .statusText {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 5;
+      padding: 12px;
+      color: white;
+      font-size: 14px;
+      background: rgba(0,0,0,0.35);
+      pointer-events: none;
+    }
+
+    .retryBtn {
+      margin-top: 10px;
+      border: none;
+      border-radius: 8px;
+      background: white;
+      color: black;
+      padding: 0.5rem 0.8rem;
+      font-size: 0.9rem;
+      font-weight: bold;
+      cursor: pointer;
+      pointer-events: auto;
+    }
+
+    .resizeHandle {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      width: 18px;
+      height: 18px;
+      cursor: nwse-resize;
+      z-index: 20;
+      pointer-events: auto;
+      background: linear-gradient(135deg, transparent 0%, transparent 50%, rgba(255,255,255,0.35) 50%, rgba(255,255,255,0.35) 70%, transparent 70%);
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="startOverlay">
+    <div>
+      <h1>AR Multi-Window Viewer</h1>
+      <p>Tap to start camera and scan the target image.</p>
+      <button id="startButton">Start AR</button>
+    </div>
+  </div>
+
+  <div id="topLabel" class="top-label"><span class="icon">◉</span><span id="scanLabelText">Scanning</span></div>
+
+  <a-scene
+    id="scene"
+    mindar-image="imageTargetSrc: ./targets.mind; autoStart: false;"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false"
+    embedded
+    renderer="colorManagement: true, physicallyCorrectLights; alpha: true"
+  >
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+    <a-entity id="target0" mindar-image-target="targetIndex: 0"></a-entity>
+  </a-scene>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const STORAGE_KEY = "ar_window_state_v1";
+
+      const CONTENT = {
+        0: { title: "Test", type: "video", src: "/Users/rahellutolf/Documents/Studium/Master/VA Voser/1_2_Video/Bildschirmaufnahme 2026-09-13 um 23.55.15.mov", aspect: 16 / 9 }
+      };
+
+      const startOverlay = document.getElementById("startOverlay");
+      const startButton = document.getElementById("startButton");
+      const scene = document.getElementById("scene");
+      const topLabel = document.getElementById("topLabel");
+      const scanLabelText = document.getElementById("scanLabelText");
+
+      const target0 = document.getElementById("target0");
+
+      const openWindows = {};
+      let zCounter = 10000;
+      let scanPaused = false;
+
+      const isDesktop = () => window.matchMedia("(pointer:fine)").matches && window.innerWidth >= 900;
+
+      function rand(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+      }
+
+      function loadState() {
+        try {
+          return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+        } catch {
+          return {};
+        }
+      }
+
+      function saveState(state) {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        } catch {}
+      }
+
+      function getOccupiedRects() {
+        return Object.values(openWindows).map(win => win.getBoundingClientRect());
+      }
+
+      function rectsOverlap(a, b, padding = 24) {
+        return !(
+          a.right + padding < b.left ||
+          a.left - padding > b.right ||
+          a.bottom + padding < b.top ||
+          a.top - padding > b.bottom
+        );
+      }
+
+      function fitWindowSize(item) {
+        const headerHeight = 44;
+        const width = item.type === "iframe" ? (isDesktop() ? 520 : 380) : (isDesktop() ? 420 : 380);
+        const aspect = item.aspect || 16 / 9;
+        const contentHeight = Math.round(width / aspect);
+        return { width, height: contentHeight + headerHeight };
+      }
+
+      function findFreePosition(width, height, preferred) {
+        const margin = 20;
+        const maxX = Math.max(margin, window.innerWidth - width - margin);
+        const maxY = Math.max(margin, window.innerHeight - height - margin);
+
+        if (!isDesktop()) return { left: 20, top: 80 };
+
+        const occupied = getOccupiedRects();
+        if (preferred) {
+          const test = {
+            left: preferred.left,
+            top: preferred.top,
+            right: preferred.left + width,
+            bottom: preferred.top + height
+          };
+          if (!occupied.some(r => rectsOverlap(test, r))) return preferred;
+        }
+
+        for (let i = 0; i < 40; i++) {
+          const left = rand(margin, maxX);
+          const top = rand(80, maxY);
+          const test = { left, top, right: left + width, bottom: top + height };
+          if (!occupied.some(r => rectsOverlap(test, r))) return { left, top };
+        }
+
+        return { left: rand(margin, maxX), top: rand(80, maxY) };
+      }
+
+      function updateScanLabel(paused) {
+        scanLabelText.textContent = paused ? "Scanning paused" : "Scanning";
+        topLabel.classList.toggle("paused", paused);
+      }
+
+      function setScanState(paused) {
+        scanPaused = paused;
+        updateScanLabel(paused);
+        const system = scene.systems && scene.systems["mindar-image-system"];
+        if (!system) return;
+        try {
+          if (paused) system.stop?.();
+          else system.start?.();
+        } catch (err) {
+          console.warn("Could not toggle scanning:", err);
+        }
+      }
+
+      topLabel.addEventListener("click", () => setScanState(!scanPaused));
+
+      function bindButton(btn, handler) {
+        const stop = e => { e.preventDefault(); e.stopPropagation(); };
+        btn.addEventListener("pointerdown", stop);
+        btn.addEventListener("mousedown", stop);
+        btn.addEventListener("touchstart", stop, { passive: false });
+        btn.addEventListener("click", e => {
+          stop(e);
+          handler();
+        });
+      }
+
+      function createIframeFallback(wrap, iframeEl, statusEl) {
+        let loaded = false;
+        let timeoutId = null;
+
+        const retryBtn = document.createElement("button");
+        retryBtn.className = "retryBtn";
+        retryBtn.textContent = "Retry";
+
+        function showError(msg) {
+          statusEl.style.display = "block";
+          statusEl.innerHTML = `${msg}<br>`;
+          statusEl.appendChild(retryBtn);
+        }
+
+        iframeEl.addEventListener("load", () => {
+          loaded = true;
+          clearTimeout(timeoutId);
+          statusEl.style.display = "none";
+        });
+
+        timeoutId = setTimeout(() => {
+          if (!loaded) {
+            showError("Viewer did not load.");
+          }
+        }, 8000);
+
+        retryBtn.addEventListener("click", () => {
+          loaded = false;
+          statusEl.textContent = "Retrying...";
+          iframeEl.src = iframeEl.src;
+          clearTimeout(timeoutId);
+          timeoutId = setTimeout(() => {
+            if (!loaded) {
+              showError("Viewer did not load.");
+            }
+          }, 8000);
+        });
+      }
+
+      function makeWindow(index) {
+        const item = CONTENT[index];
+        if (!item) return;
+
+        const state = loadState();
+        const saved = state[index];
+
+        if (openWindows[index]) {
+          openWindows[index].style.display = "block";
+          openWindows[index].style.zIndex = (++zCounter).toString();
+          return;
+        }
+
+        const size = fitWindowSize(item);
+
+        const win = document.createElement("div");
+        win.className = "ar-window";
+        win.style.display = "block";
+        win.style.width = `${saved?.width || size.width}px`;
+        win.style.height = `${saved?.height || size.height}px`;
+        win.style.zIndex = (++zCounter).toString();
+
+        const pos = findFreePosition(
+          parseInt(win.style.width, 10),
+          parseInt(win.style.height, 10),
+          saved ? { left: saved.left, top: saved.top } : null
+        );
+        win.style.left = `${pos.left}px`;
+        win.style.top = `${pos.top}px`;
+
+        const header = document.createElement("div");
+        header.className = "ar-header";
+
+        const title = document.createElement("div");
+        title.className = "ar-title";
+        title.textContent = item.title;
+
+        const buttons = document.createElement("div");
+        buttons.className = "ar-buttons";
+
+        const fullBtn = document.createElement("button");
+        fullBtn.className = "iconBtn";
+        fullBtn.textContent = "⛶";
+        fullBtn.title = "Fullscreen";
+
+        const closeBtn = document.createElement("button");
+        closeBtn.className = "iconBtn";
+        closeBtn.textContent = "×";
+        closeBtn.title = "Close";
+
+        let pauseBtn = null;
+        if (item.type === "video") {
+          pauseBtn = document.createElement("button");
+          pauseBtn.className = "iconBtn";
+          pauseBtn.textContent = "⏸";
+          pauseBtn.title = "Pause/Play";
+        }
+
+        buttons.appendChild(fullBtn);
+        if (pauseBtn) buttons.appendChild(pauseBtn);
+        buttons.appendChild(closeBtn);
+
+        header.appendChild(title);
+        header.appendChild(buttons);
+
+        const content = document.createElement("div");
+        content.className = "ar-content";
+
+        let videoEl = null;
+        let iframeEl = null;
+        let fullscreen = !!saved?.fullscreen;
+
+        function persist() {
+          const s = loadState();
+          s[index] = {
+            left: parseInt(win.style.left, 10) || 0,
+            top: parseInt(win.style.top, 10) || 0,
+            width: parseInt(win.style.width, 10) || size.width,
+            height: parseInt(win.style.height, 10) || size.height,
+            fullscreen
+          };
+          saveState(s);
+        }
+
+        function applyFullscreen(on) {
+          fullscreen = on;
+          if (fullscreen) {
+            win.classList.add("fullscreen");
+            win.style.top = "0";
+            win.style.left = "0";
+            win.style.width = "100vw";
+            win.style.height = "100vh";
+          } else {
+            win.classList.remove("fullscreen");
+            const again = fitWindowSize(item);
+            win.style.width = `${saved?.width || again.width}px`;
+            win.style.height = `${saved?.height || again.height}px`;
+            const newPos = findFreePosition(
+              parseInt(win.style.width, 10),
+              parseInt(win.style.height, 10),
+              saved ? { left: saved.left, top: saved.top } : null
+            );
+            win.style.left = `${newPos.left}px`;
+            win.style.top = `${newPos.top}px`;
+          }
+          persist();
+        }
+
+        bindButton(fullBtn, () => applyFullscreen(!fullscreen));
+
+        bindButton(closeBtn, () => {
+          if (videoEl) {
+            videoEl.pause();
+            videoEl.src = "";
+          }
+          win.remove();
+          delete openWindows[index];
+          const s = loadState();
+          delete s[index];
+          saveState(s);
+        });
+
+        if (item.type === "video") {
+          videoEl = document.createElement("video");
+          videoEl.className = "ar-video";
+          videoEl.src = item.src;
+          videoEl.muted = true;
+          videoEl.loop = true;
+          videoEl.playsInline = true;
+          videoEl.webkitPlaysInline = true;
+          videoEl.preload = "auto";
+
+          if (pauseBtn) {
+            bindButton(pauseBtn, () => {
+              if (videoEl.paused) {
+                videoEl.play().catch(() => {});
+                pauseBtn.textContent = "⏸";
+              } else {
+                videoEl.pause();
+                pauseBtn.textContent = "▶";
+              }
+            });
+          }
+
+          content.appendChild(videoEl);
+          videoEl.play().catch(() => {});
+        }
+
+        if (item.type === "iframe") {
+          const wrap = document.createElement("div");
+          wrap.className = "iframeWrap";
+
+          const status = document.createElement("div");
+          status.className = "statusText";
+          status.textContent = "Loading viewer...";
+          wrap.appendChild(status);
+
+          iframeEl = document.createElement("iframe");
+          iframeEl.className = "ar-iframe";
+          iframeEl.src = item.src;
+          iframeEl.allow = "fullscreen";
+          wrap.appendChild(iframeEl);
+
+          createIframeFallback(wrap, iframeEl, status);
+          content.appendChild(wrap);
+        }
+
+        const resizeHandle = document.createElement("div");
+        resizeHandle.className = "resizeHandle";
+        content.appendChild(resizeHandle);
+
+        win.appendChild(header);
+        win.appendChild(content);
+        document.body.appendChild(win);
+        openWindows[index] = win;
+
+        if (fullscreen) applyFullscreen(true);
+        persist();
+
+        // dragging via title only
+        let dragging = false;
+        let offsetX = 0;
+        let offsetY = 0;
+
+        title.addEventListener("pointerdown", (e) => {
+          if (fullscreen || !isDesktop()) return;
+          e.preventDefault();
+          e.stopPropagation();
+          dragging = true;
+          win.style.zIndex = (++zCounter).toString();
+          const rect = win.getBoundingClientRect();
+          offsetX = e.clientX - rect.left;
+          offsetY = e.clientY - rect.top;
+          title.setPointerCapture?.(e.pointerId);
+        });
+
+        window.addEventListener("pointermove", (e) => {
+          if (!dragging) return;
+          win.style.left = `${e.clientX - offsetX}px`;
+          win.style.top = `${e.clientY - offsetY}px`;
+          persist();
+        });
+
+        window.addEventListener("pointerup", () => {
+          dragging = false;
+        });
+
+        // resizing
+        let resizing = false;
+        let startX = 0, startY = 0, startW = 0, startH = 0;
+
+        resizeHandle.addEventListener("pointerdown", (e) => {
+          if (fullscreen || !isDesktop()) return;
+          e.preventDefault();
+          e.stopPropagation();
+          resizing = true;
+          win.style.zIndex = (++zCounter).toString();
+          const rect = win.getBoundingClientRect();
+          startX = e.clientX;
+          startY = e.clientY;
+          startW = rect.width;
+          startH = rect.height;
+          resizeHandle.setPointerCapture?.(e.pointerId);
+        });
+
+        window.addEventListener("pointermove", (e) => {
+          if (!resizing) return;
+          const minW = 280;
+          const minH = 220;
+          const maxW = window.innerWidth - win.offsetLeft - 20;
+          const maxH = window.innerHeight - win.offsetTop - 20;
+          const newW = Math.max(minW, Math.min(maxW, startW + (e.clientX - startX)));
+          const newH = Math.max(minH, Math.min(maxH, startH + (e.clientY - startY)));
+          win.style.width = `${newW}px`;
+          win.style.height = `${newH}px`;
+          persist();
+        });
+
+        window.addEventListener("pointerup", () => {
+          resizing = false;
+        });
+      }
+
+      startButton.addEventListener("click", async () => {
+        try {
+          const system = scene.systems["mindar-image-system"];
+          if (!system) throw new Error("MindAR system not ready");
+          await system.start();
+          startOverlay.style.display = "none";
+          topLabel.style.display = "block";
+          updateScanLabel(false);
+        } catch (err) {
+          console.error("Could not start AR:", err);
+          alert("Could not start AR.");
+        }
+      });
+
+      target0.addEventListener("targetFound", () => makeWindow(0));
+    });
+  </script>
+</body>
+</html>
