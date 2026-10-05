@@ -162,6 +162,18 @@
       pointer-events: auto;
     }
 
+    .ar-image {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: contain;
+      margin: 0;
+      padding: 0;
+      background: black;
+      pointer-events: none;
+      -webkit-user-drag: none;
+    }
+
     .ar-video,
     .ar-iframe {
       width: 100%;
@@ -251,7 +263,7 @@
       const STORAGE_KEY = "ar_window_state_v1";
 
       const CONTENT = {
-        0: { title: "Test", type: "video", src: "./video/Bildschirmaufnahme 2026-09-13 um 23.55.15 Kopie.mp4", aspect: 16 / 9 }
+        0: { title: "Test", type: "image", src: "./images/test.gif", aspect: 16 / 9 }
       };
 
       const startOverlay = document.getElementById("startOverlay");
@@ -551,6 +563,15 @@
 
           content.appendChild(videoEl);
           videoEl.play().catch(() => {});
+        }
+
+        if (item.type === "image") {
+          const imgEl = document.createElement("img");
+          imgEl.className = "ar-image";
+          imgEl.src = item.src;
+          imgEl.alt = item.title || "";
+          imgEl.draggable = false;
+          content.appendChild(imgEl);
         }
 
         if (item.type === "iframe") {
