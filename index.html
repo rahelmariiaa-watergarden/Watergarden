@@ -256,6 +256,7 @@
   >
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
     <a-entity id="target0" mindar-image-target="targetIndex: 0"></a-entity>
+    <a-entity id="target1" mindar-image-target="targetIndex: 1"></a-entity>
   </a-scene>
 
   <script>
@@ -263,7 +264,8 @@
       const STORAGE_KEY = "ar_window_state_v1";
 
       const CONTENT = {
-        0: { title: "Bilderreihe", type: "image", src: "images/Sensorgif.gif", aspect: 16 / 9 }
+        0: { title: "Bilderreihe", type: "image", src: "./images/Sensorgif.gif", aspect: 16 / 9 },
+        1: { title: "CV", type: "image", src: "./images/CV.gif", aspect: 16 / 9 }
       };
 
       const startOverlay = document.getElementById("startOverlay");
@@ -273,6 +275,7 @@
       const scanLabelText = document.getElementById("scanLabelText");
 
       const target0 = document.getElementById("target0");
+      const target1 = document.getElementById("target1");
 
       const openWindows = {};
       let zCounter = 10000;
@@ -684,6 +687,7 @@
       });
 
       target0.addEventListener("targetFound", () => makeWindow(0));
+      target1.addEventListener("targetFound", () => makeWindow(1));
     });
   </script>
 </body>
