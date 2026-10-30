@@ -9,7 +9,8 @@
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
   <style>
-    html, body {
+    html,
+    body {
       margin: 0;
       width: 100%;
       height: 100%;
@@ -29,7 +30,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(0,0,0,0.92);
+      box-sizing: border-box;
+      background: rgba(0, 0, 0, 0.92);
       color: white;
       z-index: 9999;
       text-align: center;
@@ -46,6 +48,7 @@
       font-size: 1rem;
       font-weight: bold;
       cursor: pointer;
+      touch-action: manipulation;
     }
 
     .top-label {
@@ -54,18 +57,19 @@
       left: 12px;
       z-index: 10000;
       color: white;
-      background: rgba(0,0,0,0.55);
-      padding: 6px 10px;
+      background: rgba(0, 0, 0, 0.55);
+      padding: 8px 12px;
       border-radius: 999px;
       font-size: 14px;
       display: none;
       cursor: pointer;
       user-select: none;
-      pointer-events: auto;
+      -webkit-user-select: none;
+      touch-action: manipulation;
     }
 
     .top-label.paused {
-      background: rgba(130,0,0,0.75);
+      background: rgba(130, 0, 0, 0.75);
     }
 
     .top-label .icon {
@@ -74,54 +78,64 @@
 
     .ar-window {
       position: fixed;
+      box-sizing: border-box;
       width: 420px;
-      min-width: 280px;
-      min-height: 220px;
+      min-width: 0;
+      min-height: 0;
       z-index: 9998;
       background: #111;
       border-radius: 12px;
       overflow: hidden;
-      box-shadow: 0 10px 35px rgba(0,0,0,0.35);
-      touch-action: none;
+      box-shadow: 0 10px 35px rgba(0, 0, 0, 0.35);
       user-select: none;
+      -webkit-user-select: none;
       display: none;
       pointer-events: auto;
     }
 
     .ar-window.fullscreen {
+      inset: 0 !important;
       width: 100vw !important;
       height: 100vh !important;
-      top: 0 !important;
-      left: 0 !important;
+      height: 100dvh !important;
       border-radius: 0 !important;
     }
 
     .ar-header {
-      background: rgba(0,0,0,0.88);
-      color: white;
-      height: 44px;
+      box-sizing: border-box;
+      height: 48px;
+      min-height: 48px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      box-sizing: border-box;
-      padding: 0 8px 0 10px;
+      padding: 0 8px 0 12px;
       position: relative;
       z-index: 10;
+      background: rgba(0, 0, 0, 0.88);
+      color: white;
       pointer-events: auto;
     }
 
     .ar-title {
       flex: 1;
+      min-width: 0;
+      height: 100%;
+      display: flex;
+      align-items: center;
       font-size: 14px;
       font-weight: bold;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
       padding-right: 8px;
-      line-height: 44px;
-      pointer-events: auto;
-      cursor: move;
+      cursor: grab;
+      touch-action: none;
       user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .ar-title:active {
+      cursor: grabbing;
     }
 
     .ar-buttons {
@@ -129,14 +143,17 @@
       gap: 6px;
       flex-shrink: 0;
       align-items: center;
-      pointer-events: auto;
       position: relative;
-      z-index: 9999;
+      z-index: 11;
     }
 
     .iconBtn {
-      width: 28px;
-      height: 28px;
+      box-sizing: border-box;
+      width: 36px;
+      height: 36px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       border: none;
       border-radius: 999px;
       background: white;
@@ -144,22 +161,26 @@
       font-weight: bold;
       cursor: pointer;
       padding: 0;
-      line-height: 28px;
-      font-size: 16px;
-      pointer-events: auto;
-      position: relative;
-      z-index: 9999;
+      font-size: 19px;
+      line-height: 1;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .iconBtn:focus-visible,
+    #startButton:focus-visible {
+      outline: 3px solid #4da3ff;
+      outline-offset: 2px;
     }
 
     .ar-content {
       position: relative;
       width: 100%;
-      height: calc(100% - 44px);
+      height: calc(100% - 48px);
       overflow: hidden;
       background: black;
       margin: 0;
       padding: 0;
-      pointer-events: auto;
     }
 
     .ar-image {
@@ -183,7 +204,6 @@
       margin: 0;
       padding: 0;
       background: black;
-      pointer-events: auto;
     }
 
     .iframeWrap {
@@ -191,7 +211,6 @@
       width: 100%;
       height: 100%;
       background: black;
-      pointer-events: auto;
     }
 
     .statusText {
@@ -203,7 +222,7 @@
       padding: 12px;
       color: white;
       font-size: 14px;
-      background: rgba(0,0,0,0.35);
+      background: rgba(0, 0, 0, 0.35);
       pointer-events: none;
     }
 
@@ -213,38 +232,64 @@
       border-radius: 8px;
       background: white;
       color: black;
-      padding: 0.5rem 0.8rem;
+      padding: 0.6rem 0.9rem;
       font-size: 0.9rem;
       font-weight: bold;
       cursor: pointer;
       pointer-events: auto;
+      touch-action: manipulation;
     }
 
     .resizeHandle {
       position: absolute;
       right: 0;
       bottom: 0;
-      width: 18px;
-      height: 18px;
+      width: 32px;
+      height: 32px;
       cursor: nwse-resize;
       z-index: 20;
-      pointer-events: auto;
-      background: linear-gradient(135deg, transparent 0%, transparent 50%, rgba(255,255,255,0.35) 50%, rgba(255,255,255,0.35) 70%, transparent 70%);
-      opacity: 0.9;
+      touch-action: none;
+      background: linear-gradient(
+        135deg,
+        transparent 0%,
+        transparent 50%,
+        rgba(255, 255, 255, 0.55) 50%,
+        rgba(255, 255, 255, 0.55) 65%,
+        transparent 65%
+      );
+    }
+
+    @media (max-width: 480px) {
+      .ar-header {
+        padding-left: 8px;
+        padding-right: 6px;
+      }
+
+      .ar-buttons {
+        gap: 4px;
+      }
+
+      .iconBtn {
+        width: 36px;
+        height: 36px;
+      }
     }
   </style>
 </head>
-<body>
 
+<body>
   <div id="startOverlay">
     <div>
       <h1>AR Multi-Window Viewer</h1>
       <p>Tap to start camera and scan the target image.</p>
-      <button id="startButton">Start AR</button>
+      <button id="startButton" type="button">Start AR</button>
     </div>
   </div>
 
-  <div id="topLabel" class="top-label"><span class="icon">◉</span><span id="scanLabelText">Scanning</span></div>
+  <div id="topLabel" class="top-label">
+    <span class="icon">◉</span>
+    <span id="scanLabelText">Scanning</span>
+  </div>
 
   <a-scene
     id="scene"
@@ -288,12 +333,14 @@
       const topLabel = document.getElementById("topLabel");
       const scanLabelText = document.getElementById("scanLabelText");
 
-
       const openWindows = {};
       let zCounter = 10000;
       let scanPaused = false;
+      let activeGesture = null;
 
-      const isDesktop = () => window.matchMedia("(pointer:fine)").matches && window.innerWidth >= 900;
+      function isDesktop() {
+        return window.matchMedia("(pointer: fine)").matches && window.innerWidth >= 900;
+      }
 
       function rand(min, max) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -313,6 +360,37 @@
         } catch {}
       }
 
+      function getAvailableSize() {
+        return {
+          width: Math.max(1, window.innerWidth - 16),
+          height: Math.max(1, window.innerHeight - 16)
+        };
+      }
+
+      function fitWindowSize(item) {
+        const available = getAvailableSize();
+        const preferredWidth = item.type === "iframe"
+          ? (isDesktop() ? 520 : 380)
+          : (isDesktop() ? 420 : 380);
+
+        const width = Math.min(preferredWidth, available.width);
+        const aspect = item.aspect || 16 / 9;
+        const contentHeight = Math.round(width / aspect);
+        const height = Math.min(contentHeight + 48, available.height);
+
+        return { width, height };
+      }
+
+      function clampPosition(left, top, width, height) {
+        const maxLeft = Math.max(0, window.innerWidth - width);
+        const maxTop = Math.max(0, window.innerHeight - Math.min(48, height));
+
+        return {
+          left: Math.max(0, Math.min(left, maxLeft)),
+          top: Math.max(0, Math.min(top, maxTop))
+        };
+      }
+
       function getOccupiedRects() {
         return Object.values(openWindows).map(win => win.getBoundingClientRect());
       }
@@ -326,40 +404,50 @@
         );
       }
 
-      function fitWindowSize(item) {
-        const headerHeight = 44;
-        const width = item.type === "iframe" ? (isDesktop() ? 520 : 380) : (isDesktop() ? 420 : 380);
-        const aspect = item.aspect || 16 / 9;
-        const contentHeight = Math.round(width / aspect);
-        return { width, height: contentHeight + headerHeight };
-      }
-
       function findFreePosition(width, height, preferred) {
-        const margin = 20;
+        const margin = 12;
         const maxX = Math.max(margin, window.innerWidth - width - margin);
-        const maxY = Math.max(margin, window.innerHeight - height - margin);
+        const maxY = Math.max(64, window.innerHeight - height - margin);
 
-        if (!isDesktop()) return { left: 20, top: 80 };
+        if (preferred) {
+          const pos = clampPosition(preferred.left, preferred.top, width, height);
+          const test = {
+            left: pos.left,
+            top: pos.top,
+            right: pos.left + width,
+            bottom: pos.top + height
+          };
+
+          if (!getOccupiedRects().some(rect => rectsOverlap(test, rect))) {
+            return pos;
+          }
+        }
+
+        if (!isDesktop()) {
+          return clampPosition(12, 76, width, height);
+        }
 
         const occupied = getOccupiedRects();
-        if (preferred) {
-          const test = {
-            left: preferred.left,
-            top: preferred.top,
-            right: preferred.left + width,
-            bottom: preferred.top + height
-          };
-          if (!occupied.some(r => rectsOverlap(test, r))) return preferred;
-        }
 
         for (let i = 0; i < 40; i++) {
           const left = rand(margin, maxX);
-          const top = rand(80, maxY);
-          const test = { left, top, right: left + width, bottom: top + height };
-          if (!occupied.some(r => rectsOverlap(test, r))) return { left, top };
+          const top = rand(Math.min(76, maxY), maxY);
+          const test = {
+            left,
+            top,
+            right: left + width,
+            bottom: top + height
+          };
+
+          if (!occupied.some(rect => rectsOverlap(test, rect))) {
+            return { left, top };
+          }
         }
 
-        return { left: rand(margin, maxX), top: rand(80, maxY) };
+        return {
+          left: rand(margin, maxX),
+          top: rand(Math.min(76, maxY), maxY)
+        };
       }
 
       function updateScanLabel(paused) {
@@ -370,8 +458,10 @@
       function setScanState(paused) {
         scanPaused = paused;
         updateScanLabel(paused);
+
         const system = scene.systems && scene.systems["mindar-image-system"];
         if (!system) return;
+
         try {
           if (paused) system.stop?.();
           else system.start?.();
@@ -380,15 +470,21 @@
         }
       }
 
-      topLabel.addEventListener("click", () => setScanState(!scanPaused));
+      topLabel.addEventListener("click", () => {
+        setScanState(!scanPaused);
+      });
 
-      function bindButton(btn, handler) {
-        const stop = e => { e.preventDefault(); e.stopPropagation(); };
-        btn.addEventListener("pointerdown", stop);
-        btn.addEventListener("mousedown", stop);
-        btn.addEventListener("touchstart", stop, { passive: false });
-        btn.addEventListener("click", e => {
-          stop(e);
+      /*
+       * Do not preventDefault() on pointerdown for buttons:
+       * that can suppress the synthesized click on touch devices.
+       */
+      function bindButton(button, handler) {
+        button.addEventListener("pointerdown", event => {
+          event.stopPropagation();
+        });
+
+        button.addEventListener("click", event => {
+          event.stopPropagation();
           handler();
         });
       }
@@ -399,11 +495,13 @@
 
         const retryBtn = document.createElement("button");
         retryBtn.className = "retryBtn";
+        retryBtn.type = "button";
         retryBtn.textContent = "Retry";
 
-        function showError(msg) {
+        function showError(message) {
           statusEl.style.display = "block";
-          statusEl.innerHTML = `${msg}<br>`;
+          statusEl.innerHTML = "";
+          statusEl.append(document.createTextNode(message), document.createElement("br"));
           statusEl.appendChild(retryBtn);
         }
 
@@ -414,9 +512,7 @@
         });
 
         timeoutId = setTimeout(() => {
-          if (!loaded) {
-            showError("Viewer did not load.");
-          }
+          if (!loaded) showError("Viewer did not load.");
         }, 8000);
 
         retryBtn.addEventListener("click", () => {
@@ -424,12 +520,24 @@
           statusEl.textContent = "Retrying...";
           iframeEl.src = iframeEl.src;
           clearTimeout(timeoutId);
+
           timeoutId = setTimeout(() => {
-            if (!loaded) {
-              showError("Viewer did not load.");
-            }
+            if (!loaded) showError("Viewer did not load.");
           }, 8000);
         });
+      }
+
+      function persistWindow(index, win) {
+        if (win.classList.contains("fullscreen")) return;
+
+        const state = loadState();
+        state[index] = {
+          left: win.offsetLeft,
+          top: win.offsetTop,
+          width: win.offsetWidth,
+          height: win.offsetHeight
+        };
+        saveState(state);
       }
 
       function makeWindow(index) {
@@ -440,27 +548,41 @@
         const saved = state[index];
 
         if (openWindows[index]) {
-          openWindows[index].style.display = "block";
-          openWindows[index].style.zIndex = (++zCounter).toString();
+          const existing = openWindows[index];
+          existing.style.display = "block";
+          existing.style.zIndex = String(++zCounter);
           return;
         }
 
-        const size = fitWindowSize(item);
+        const defaultSize = fitWindowSize(item);
+        const available = getAvailableSize();
+
+        const width = Math.min(
+          Math.max(1, Number(saved?.width) || defaultSize.width),
+          available.width
+        );
+
+        const height = Math.min(
+          Math.max(1, Number(saved?.height) || defaultSize.height),
+          available.height
+        );
+
+        const pos = findFreePosition(
+          width,
+          height,
+          saved && Number.isFinite(saved.left) && Number.isFinite(saved.top)
+            ? { left: saved.left, top: saved.top }
+            : null
+        );
 
         const win = document.createElement("div");
         win.className = "ar-window";
         win.style.display = "block";
-        win.style.width = `${saved?.width || size.width}px`;
-        win.style.height = `${saved?.height || size.height}px`;
-        win.style.zIndex = (++zCounter).toString();
-
-        const pos = findFreePosition(
-          parseInt(win.style.width, 10),
-          parseInt(win.style.height, 10),
-          saved ? { left: saved.left, top: saved.top } : null
-        );
+        win.style.width = `${width}px`;
+        win.style.height = `${height}px`;
         win.style.left = `${pos.left}px`;
         win.style.top = `${pos.top}px`;
+        win.style.zIndex = String(++zCounter);
 
         const header = document.createElement("div");
         header.className = "ar-header";
@@ -468,26 +590,34 @@
         const title = document.createElement("div");
         title.className = "ar-title";
         title.textContent = item.title;
+        title.setAttribute("aria-label", `Drag ${item.title} window`);
 
         const buttons = document.createElement("div");
         buttons.className = "ar-buttons";
 
         const fullBtn = document.createElement("button");
         fullBtn.className = "iconBtn";
+        fullBtn.type = "button";
         fullBtn.textContent = "⛶";
-        fullBtn.title = "Fullscreen";
+        fullBtn.title = "Maximize or restore";
+        fullBtn.setAttribute("aria-label", "Maximize or restore window");
 
         const closeBtn = document.createElement("button");
         closeBtn.className = "iconBtn";
+        closeBtn.type = "button";
         closeBtn.textContent = "×";
         closeBtn.title = "Close";
+        closeBtn.setAttribute("aria-label", "Close window");
 
         let pauseBtn = null;
+
         if (item.type === "video") {
           pauseBtn = document.createElement("button");
           pauseBtn.className = "iconBtn";
+          pauseBtn.type = "button";
           pauseBtn.textContent = "⏸";
-          pauseBtn.title = "Pause/Play";
+          pauseBtn.title = "Pause or play";
+          pauseBtn.setAttribute("aria-label", "Pause or play video");
         }
 
         buttons.appendChild(fullBtn);
@@ -501,57 +631,71 @@
         content.className = "ar-content";
 
         let videoEl = null;
-        let iframeEl = null;
-        let fullscreen = !!saved?.fullscreen;
-
-        function persist() {
-          const s = loadState();
-          s[index] = {
-            left: parseInt(win.style.left, 10) || 0,
-            top: parseInt(win.style.top, 10) || 0,
-            width: parseInt(win.style.width, 10) || size.width,
-            height: parseInt(win.style.height, 10) || size.height,
-            fullscreen
-          };
-          saveState(s);
-        }
+        let fullscreenRestore = null;
 
         function applyFullscreen(on) {
-          fullscreen = on;
-          if (fullscreen) {
+          if (on && !win.classList.contains("fullscreen")) {
+            fullscreenRestore = {
+              left: win.offsetLeft,
+              top: win.offsetTop,
+              width: win.offsetWidth,
+              height: win.offsetHeight
+            };
+
             win.classList.add("fullscreen");
-            win.style.top = "0";
-            win.style.left = "0";
-            win.style.width = "100vw";
-            win.style.height = "100vh";
-          } else {
+            fullBtn.textContent = "⛶";
+            fullBtn.title = "Restore window";
+          } else if (!on && win.classList.contains("fullscreen")) {
             win.classList.remove("fullscreen");
-            const again = fitWindowSize(item);
-            win.style.width = `${saved?.width || again.width}px`;
-            win.style.height = `${saved?.height || again.height}px`;
-            const newPos = findFreePosition(
-              parseInt(win.style.width, 10),
-              parseInt(win.style.height, 10),
-              saved ? { left: saved.left, top: saved.top } : null
+
+            const restore = fullscreenRestore || {
+              left: pos.left,
+              top: pos.top,
+              width: defaultSize.width,
+              height: defaultSize.height
+            };
+
+            const maxWidth = Math.max(1, window.innerWidth - 16);
+            const maxHeight = Math.max(1, window.innerHeight - 16);
+            const restoreWidth = Math.min(restore.width, maxWidth);
+            const restoreHeight = Math.min(restore.height, maxHeight);
+            const restorePos = clampPosition(
+              restore.left,
+              restore.top,
+              restoreWidth,
+              restoreHeight
             );
-            win.style.left = `${newPos.left}px`;
-            win.style.top = `${newPos.top}px`;
+
+            win.style.width = `${restoreWidth}px`;
+            win.style.height = `${restoreHeight}px`;
+            win.style.left = `${restorePos.left}px`;
+            win.style.top = `${restorePos.top}px`;
+
+            fullscreenRestore = null;
+            fullBtn.title = "Maximize window";
+            persistWindow(index, win);
           }
-          persist();
         }
 
-        bindButton(fullBtn, () => applyFullscreen(!fullscreen));
+        bindButton(fullBtn, () => {
+          applyFullscreen(!win.classList.contains("fullscreen"));
+        });
 
         bindButton(closeBtn, () => {
           if (videoEl) {
             videoEl.pause();
-            videoEl.src = "";
+            videoEl.removeAttribute("src");
+            videoEl.load();
           }
+
+          if (activeGesture?.win === win) activeGesture = null;
+
           win.remove();
           delete openWindows[index];
-          const s = loadState();
-          delete s[index];
-          saveState(s);
+
+          const currentState = loadState();
+          delete currentState[index];
+          saveState(currentState);
         });
 
         if (item.type === "video") {
@@ -561,35 +705,31 @@
           videoEl.muted = true;
           videoEl.loop = true;
           videoEl.playsInline = true;
-          videoEl.webkitPlaysInline = true;
+          videoEl.setAttribute("playsinline", "");
           videoEl.preload = "auto";
 
-          if (pauseBtn) {
-            bindButton(pauseBtn, () => {
-              if (videoEl.paused) {
-                videoEl.play().catch(() => {});
-                pauseBtn.textContent = "⏸";
-              } else {
-                videoEl.pause();
-                pauseBtn.textContent = "▶";
-              }
-            });
-          }
+          bindButton(pauseBtn, () => {
+            if (videoEl.paused) {
+              videoEl.play().catch(() => {});
+              pauseBtn.textContent = "⏸";
+              pauseBtn.title = "Pause video";
+            } else {
+              videoEl.pause();
+              pauseBtn.textContent = "▶";
+              pauseBtn.title = "Play video";
+            }
+          });
 
           content.appendChild(videoEl);
           videoEl.play().catch(() => {});
-        }
-
-        if (item.type === "image") {
+        } else if (item.type === "image") {
           const imgEl = document.createElement("img");
           imgEl.className = "ar-image";
           imgEl.src = item.src;
           imgEl.alt = item.title || "";
           imgEl.draggable = false;
           content.appendChild(imgEl);
-        }
-
-        if (item.type === "iframe") {
+        } else if (item.type === "iframe") {
           const wrap = document.createElement("div");
           wrap.className = "iframeWrap";
 
@@ -598,7 +738,7 @@
           status.textContent = "Loading viewer...";
           wrap.appendChild(status);
 
-          iframeEl = document.createElement("iframe");
+          const iframeEl = document.createElement("iframe");
           iframeEl.className = "ar-iframe";
           iframeEl.src = item.src;
           iframeEl.allow = "fullscreen";
@@ -610,84 +750,140 @@
 
         const resizeHandle = document.createElement("div");
         resizeHandle.className = "resizeHandle";
-        content.appendChild(resizeHandle);
+        resizeHandle.setAttribute("aria-label", "Resize window");
 
+        content.appendChild(resizeHandle);
         win.appendChild(header);
         win.appendChild(content);
         document.body.appendChild(win);
         openWindows[index] = win;
 
-        if (fullscreen) applyFullscreen(true);
-        persist();
+        // Deliberately do not restore fullscreen automatically.
+        persistWindow(index, win);
 
-        // dragging via title only
-        let dragging = false;
-        let offsetX = 0;
-        let offsetY = 0;
+        function beginGesture(event, type, captureElement) {
+          if (event.button !== undefined && event.button !== 0) return;
+          if (win.classList.contains("fullscreen")) return;
 
-        title.addEventListener("pointerdown", (e) => {
-          if (fullscreen || !isDesktop()) return;
-          e.preventDefault();
-          e.stopPropagation();
-          dragging = true;
-          win.style.zIndex = (++zCounter).toString();
+          event.preventDefault();
+          event.stopPropagation();
+
+          win.style.zIndex = String(++zCounter);
+
           const rect = win.getBoundingClientRect();
-          offsetX = e.clientX - rect.left;
-          offsetY = e.clientY - rect.top;
-          title.setPointerCapture?.(e.pointerId);
+
+          activeGesture = {
+            win,
+            type,
+            pointerId: event.pointerId,
+            startX: event.clientX,
+            startY: event.clientY,
+            startLeft: rect.left,
+            startTop: rect.top,
+            startWidth: rect.width,
+            startHeight: rect.height
+          };
+
+          try {
+            captureElement.setPointerCapture(event.pointerId);
+          } catch {}
+        }
+
+        title.addEventListener("pointerdown", event => {
+          beginGesture(event, "drag", title);
         });
 
-        window.addEventListener("pointermove", (e) => {
-          if (!dragging) return;
-          win.style.left = `${e.clientX - offsetX}px`;
-          win.style.top = `${e.clientY - offsetY}px`;
-          persist();
-        });
-
-        window.addEventListener("pointerup", () => {
-          dragging = false;
-        });
-
-        // resizing
-        let resizing = false;
-        let startX = 0, startY = 0, startW = 0, startH = 0;
-
-        resizeHandle.addEventListener("pointerdown", (e) => {
-          if (fullscreen || !isDesktop()) return;
-          e.preventDefault();
-          e.stopPropagation();
-          resizing = true;
-          win.style.zIndex = (++zCounter).toString();
-          const rect = win.getBoundingClientRect();
-          startX = e.clientX;
-          startY = e.clientY;
-          startW = rect.width;
-          startH = rect.height;
-          resizeHandle.setPointerCapture?.(e.pointerId);
-        });
-
-        window.addEventListener("pointermove", (e) => {
-          if (!resizing) return;
-          const minW = 280;
-          const minH = 220;
-          const maxW = window.innerWidth - win.offsetLeft - 20;
-          const maxH = window.innerHeight - win.offsetTop - 20;
-          const newW = Math.max(minW, Math.min(maxW, startW + (e.clientX - startX)));
-          const newH = Math.max(minH, Math.min(maxH, startH + (e.clientY - startY)));
-          win.style.width = `${newW}px`;
-          win.style.height = `${newH}px`;
-          persist();
-        });
-
-        window.addEventListener("pointerup", () => {
-          resizing = false;
+        resizeHandle.addEventListener("pointerdown", event => {
+          beginGesture(event, "resize", resizeHandle);
         });
       }
+
+      document.addEventListener("pointermove", event => {
+        if (!activeGesture || event.pointerId !== activeGesture.pointerId) return;
+
+        const { win, type, startX, startY, startLeft, startTop, startWidth, startHeight } =
+          activeGesture;
+
+        if (!win.isConnected || win.classList.contains("fullscreen")) {
+          activeGesture = null;
+          return;
+        }
+
+        if (type === "drag") {
+          const newLeft = startLeft + (event.clientX - startX);
+          const newTop = startTop + (event.clientY - startY);
+          const position = clampPosition(
+            newLeft,
+            newTop,
+            win.offsetWidth,
+            win.offsetHeight
+          );
+
+          win.style.left = `${position.left}px`;
+          win.style.top = `${position.top}px`;
+        } else {
+          const available = getAvailableSize();
+          const maxWidth = Math.max(1, window.innerWidth - win.offsetLeft);
+          const maxHeight = Math.max(1, window.innerHeight - win.offsetTop);
+          const minWidth = Math.min(240, maxWidth);
+          const minHeight = Math.min(180, maxHeight);
+
+          const newWidth = Math.max(
+            minWidth,
+            Math.min(maxWidth, startWidth + (event.clientX - startX))
+          );
+
+          const newHeight = Math.max(
+            minHeight,
+            Math.min(maxHeight, startHeight + (event.clientY - startY))
+          );
+
+          win.style.width = `${Math.min(newWidth, available.width)}px`;
+          win.style.height = `${Math.min(newHeight, available.height)}px`;
+        }
+
+        persistWindow(
+          Object.keys(openWindows).find(key => openWindows[key] === win),
+          win
+        );
+      });
+
+      function endGesture(event) {
+        if (!activeGesture) return;
+        if (event.pointerId !== undefined && event.pointerId !== activeGesture.pointerId) return;
+        activeGesture = null;
+      }
+
+      document.addEventListener("pointerup", endGesture);
+      document.addEventListener("pointercancel", endGesture);
+
+      window.addEventListener("resize", () => {
+        Object.entries(openWindows).forEach(([index, win]) => {
+          if (win.classList.contains("fullscreen")) return;
+
+          const width = Math.min(win.offsetWidth, window.innerWidth - 16);
+          const height = Math.min(win.offsetHeight, window.innerHeight - 16);
+          const position = clampPosition(
+            win.offsetLeft,
+            win.offsetTop,
+            width,
+            height
+          );
+
+          win.style.width = `${Math.max(1, width)}px`;
+          win.style.height = `${Math.max(1, height)}px`;
+          win.style.left = `${position.left}px`;
+          win.style.top = `${position.top}px`;
+
+          persistWindow(index, win);
+        });
+      });
 
       startButton.addEventListener("click", async () => {
         try {
           const system = scene.systems["mindar-image-system"];
           if (!system) throw new Error("MindAR system not ready");
+
           await system.start();
           startOverlay.style.display = "none";
           topLabel.style.display = "block";
@@ -698,9 +894,13 @@
         }
       });
 
-      Object.keys(CONTENT).forEach((key) => {
-        const el = document.getElementById("target" + key);
-        if (el) el.addEventListener("targetFound", () => makeWindow(Number(key)));
+      Object.keys(CONTENT).forEach(key => {
+        const target = document.getElementById("target" + key);
+        if (target) {
+          target.addEventListener("targetFound", () => {
+            makeWindow(Number(key));
+          });
+        }
       });
     });
   </script>
